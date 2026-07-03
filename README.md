@@ -2,6 +2,8 @@
 
 Fine-tunes **Qwen2.5-7B-Instruct** on the Vedaz astrologer chat dataset using **QLoRA (4-bit)** via TRL's `SFTTrainer`. The resulting adapter gives the base model a compassionate, safety-aware Vedic astrologer persona in Hindi/Hinglish.
 
+**Model Weights:** 🤗 [iglou/qwen-astrologer-lora](https://huggingface.co/iglou/qwen-astrologer-lora)
+
 ---
 
 ## Table of Contents

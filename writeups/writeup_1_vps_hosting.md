@@ -56,12 +56,12 @@ Two options here:
 scp -r ./qwen-astrologer-merged user@YOUR_VPS_IP:/home/user/models/
 ```
 
-**Option B — Upload only the LoRA adapter (lighter):**
+**Option B — Pull from HuggingFace Hub (Recommended):**
+Since the model is on HuggingFace Hub, you can download it directly to the server:
 ```bash
-scp -r ./qwen-astrologer-lora user@YOUR_VPS_IP:/home/user/models/
+pip install huggingface_hub
+huggingface-cli download iglou/qwen-astrologer-lora --local-dir /home/user/models/qwen-astrologer-lora
 ```
-
-Or if you pushed to HuggingFace Hub, you can just pull it with `huggingface-cli download` on the server — faster on good server connections.
 
 ---
 
