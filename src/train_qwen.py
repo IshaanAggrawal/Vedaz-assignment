@@ -13,7 +13,7 @@ it will not run in this sandbox):
         --train_file data/train.jsonl \
         --val_file data/val.jsonl \
         --output_dir ./qwen-astrologer-lora \
-        --epochs 5
+        --epochs 3
 
 For Qwen3, just swap --model_id to e.g. Qwen/Qwen3-8B (make sure your
 transformers version is recent enough to support the Qwen3 architecture).
@@ -34,10 +34,10 @@ def main():
     ap.add_argument("--train_file", default="data/train.jsonl")
     ap.add_argument("--val_file", default="data/val.jsonl")
     ap.add_argument("--output_dir", default="./qwen-astrologer-lora")
-    ap.add_argument("--epochs", type=int, default=5)
-    ap.add_argument("--lr", type=float, default=1e-4)           # v2: gentler than 2e-4
+    ap.add_argument("--epochs", type=int, default=3)
+    ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--batch_size", type=int, default=2)
-    ap.add_argument("--grad_accum", type=int, default=4)        # v2: more updates per epoch
+    ap.add_argument("--grad_accum", type=int, default=4)
     ap.add_argument("--max_seq_len", type=int, default=2048)
     ap.add_argument("--use_4bit", action="store_true",
                     help="Load base model in 4-bit (QLoRA) to fit on smaller GPUs")
@@ -77,7 +77,7 @@ def main():
     # ---- LoRA config ----
     lora_config = LoraConfig(
         r=16,
-        lora_alpha=32,
+        lora_alpha=16,      # v1: alpha=16 (same as rank)
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
@@ -86,7 +86,7 @@ def main():
     )
 
     # ---- Training config ----
-    # v2: use inspect to handle max_length vs max_seq_length across trl versions
+    # Use inspect to handle max_length vs max_seq_length across trl versions
     sft_kwargs = dict(
         output_dir=args.output_dir,
         num_train_epochs=args.epochs,
@@ -95,8 +95,8 @@ def main():
         gradient_accumulation_steps=args.grad_accum,
         learning_rate=args.lr,
         lr_scheduler_type="cosine",
-        warmup_steps=3,           # v2: fixed warmup_steps (ratio rounds to 0 on tiny data)
-        logging_steps=1,          # v2: log every step
+        warmup_steps=3,
+        logging_steps=1,
         eval_strategy="epoch",
         save_strategy="epoch",
         save_total_limit=2,
@@ -123,8 +123,8 @@ def main():
         processing_class=tokenizer,
     )
 
-    # v2: work around trl packaging bug where create_model_card() looks for
-    # trl/templates/lm_model_card.md which isn't bundled in the PyPI wheel.
+    # Work around a trl 0.9.6 packaging bug: create_model_card() looks for
+    # trl/templates/lm_model_card.md, which isn't bundled in the PyPI wheel.
     trainer.create_model_card = lambda *args, **kwargs: None
 
     train_result = trainer.train()

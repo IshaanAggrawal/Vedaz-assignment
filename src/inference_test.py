@@ -7,19 +7,38 @@ set of sample astrology questions through it.
     python inference_test.py --base_model Qwen/Qwen2.5-7B-Instruct \
         --adapter_dir ./qwen-astrologer-lora
 
-v2 improvements:
+Features (from v1 notebook):
+  - CRISIS_PATTERN regex pre-filter: intercepts self-harm/suicidal prompts
+    and returns a hardcoded helpline response immediately, without calling
+    the model at all.
   - Explicit <|im_end|> EOS token to prevent rambling past natural stop
   - Explicit attention_mask passed to generate()
   - repetition_penalty + no_repeat_ngram_size to reduce repetitive output
   - Full safety-aware SYSTEM_PROMPT matching the fine-tuning data
-  - Multiple eval prompts including an emotional-distress safety test
+  - temperature=0.3, top_p=0.85 (conservative, focused generation)
 """
 import argparse
+import re
 
 import torch
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+
+CRISIS_PATTERN = re.compile(
+    r"(marna|mar jaana|khudkushi|suicide|jeene ka mann nahi|"
+    r"khatam ho gaya|khatam kar|jaan dena|zindagi khatam)",
+    re.IGNORECASE,
+)
+
+CRISIS_RESPONSE = (
+    "यह सुनकर मुझे बहुत चिंता हो रही है कि आप इस समय इतने गहरे दर्द से गुज़र रहे हैं। "
+    "आपका जीवन बेहद कीमती है। मैं एक एआई ज्योतिषी हूँ, और इस समय कुंडली देखना सही नहीं है।\n\n"
+    "कृपया अभी संपर्क करें:\n"
+    "• AASRA: +91-9820466726\n"
+    "• Vandrevala Foundation: +91-9999666555\n"
+    "• Kiran (Govt. Helpline): 1800-599-0019"
+)
 
 SYSTEM_PROMPT = (
     "You are Vedaz's AI Vedic astrologer. You give compassionate, balanced, "
@@ -37,23 +56,23 @@ DEFAULT_PROMPTS = [
 ]
 
 
-def generate(model_to_use, tokenizer, prompt, max_new_tokens=300):
+def generate(model_to_use, tokenizer, prompt, max_new_tokens=150):
+    # Hard safety gate: intercept crisis keywords before hitting the model
+    if CRISIS_PATTERN.search(prompt):
+        return CRISIS_RESPONSE
+
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": prompt},
     ]
 
-    # apply_chat_template returns a BatchEncoding (dict-like) — pull out
-    # input_ids / attention_mask explicitly rather than passing it directly.
     encoded_inputs = tokenizer.apply_chat_template(
         messages, add_generation_prompt=True, return_tensors="pt"
     )
     input_ids = encoded_inputs["input_ids"].to(model_to_use.device)
     attention_mask = encoded_inputs["attention_mask"].to(model_to_use.device)
 
-    # Qwen chat turns end with <|im_end|>, not the default eos token —
-    # without this, generation runs on past the natural stopping point
-    # and rambles into unrelated text.
+    # Qwen chat turns end with <|im_end|> — add it to eos so generation stops cleanly
     im_end_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
     eos_ids = [tokenizer.eos_token_id]
     if im_end_id is not None and im_end_id != tokenizer.unk_token_id:
@@ -64,8 +83,8 @@ def generate(model_to_use, tokenizer, prompt, max_new_tokens=300):
             input_ids=input_ids,
             attention_mask=attention_mask,
             max_new_tokens=max_new_tokens,
-            temperature=0.7,
-            top_p=0.9,
+            temperature=0.3,        # v1: conservative / focused
+            top_p=0.85,
             do_sample=True,
             repetition_penalty=1.15,
             no_repeat_ngram_size=3,
@@ -81,7 +100,7 @@ def main():
     ap.add_argument("--adapter_dir", default="./qwen-astrologer-lora")
     ap.add_argument("--prompt", default=None,
                     help="Single prompt to test. If omitted, runs all default eval prompts.")
-    ap.add_argument("--max_new_tokens", type=int, default=300)
+    ap.add_argument("--max_new_tokens", type=int, default=150)
     args = ap.parse_args()
 
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, trust_remote_code=True)
