@@ -247,3 +247,46 @@ See `docs/writeups.md` for the full VPS hosting write-up.
 - Training was executed on **Google Colab (Tesla T4)** via `Astrologer_Finetune_Colab_v2.ipynb`
 - The `src/` scripts are the clean, CLI-equivalent version of the notebook logic
 - With only 55 examples, the dataset is small — consider augmenting with more examples per intent (love, career, health, finance, family) before scaling up epochs
+
+---
+
+## Constraints
+
+| Constraint | Detail |
+|------------|--------|
+| **Dataset size** | Only 55 valid conversations — very limited for robust generalization across all astrology intents |
+| **Language imbalance** | Majority of data is untagged; Hindi/Hinglish coverage is uneven across topics |
+| **Hardware** | Trained on a single Tesla T4 (15 GB VRAM); larger models (Qwen3-14B+) require A100/H100 |
+| **4-bit quantization** | QLoRA reduces memory but introduces minor precision loss vs full bf16 training |
+| **No RLHF / DPO** | The model is SFT-only — it learned the style but hasn't been preference-tuned for safety ranking |
+| **Safety coverage** | The safety behavior (crisis → helpline) relies entirely on SFT examples, not a dedicated guardrail layer |
+| **Evaluation** | Validation set is only 5 examples — perplexity (3.02) is directionally useful but statistically noisy |
+| **No birth chart computation** | The model discusses astrology conversationally but does not actually compute planetary positions from birth details |
+| **vLLM latency** | Serving a 7B model on a budget VPS (< 24 GB VRAM) will be slower than cloud-hosted endpoints |
+
+---
+
+## Future Improvements
+
+### Data
+- **Scale the dataset** — collect 500–1000 diverse conversations covering career, love, health, finance, travel, family, remedies, and muhurta timing
+- **Balance intents** — ensure equal representation of languages (Hindi, Hinglish, English) and topic tags
+- **Synthetic augmentation** — use GPT-4 / Gemini to paraphrase existing examples and generate edge cases
+- **Adversarial examples** — add more safety-critical prompts (self-harm, medical predictions, death queries) so the model is robustly trained to redirect
+
+### Training
+- **Upgrade to Qwen2.5-14B or Qwen3-8B** on A100 for better reasoning depth
+- **DPO / RLHF** — run Direct Preference Optimization on safety-ranked response pairs to improve refusal quality
+- **Full bf16 training** (no quantization) once VRAM allows — reduces adapter approximation error
+- **Longer warmup** — `warmup_ratio=0.05` on a larger dataset for more stable early training
+
+### Safety & Guardrails
+- **Dedicated safety classifier** — add a lightweight classifier (e.g. fine-tuned DistilBERT) to intercept crisis prompts before they reach the LLM
+- **Prompt injection hardening** — red-team the system prompt for jailbreaks
+- **iCall / Vandrevala integration** — link crisis responses directly to live chat APIs instead of just printing numbers
+
+### Serving & Product
+- **Streaming responses** — enable token streaming via vLLM's OpenAI-compatible `/v1/completions` endpoint for a better chat UX
+- **RAG for ephemeris data** — retrieve real planetary positions (Swiss Ephemeris / Astro-Seek API) and inject them into the context for factually grounded Vedic analysis
+- **Multilingual TTS** — pair with a Hindi/Hinglish TTS model for voice-based consultations
+- **A/B evaluation pipeline** — run base vs fine-tuned head-to-head on a human preference panel, not just perplexity
