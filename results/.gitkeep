@@ -1,0 +1,8 @@
+# This file exists only to make git track the results/ directory.
+# After running train_qwen.py, this folder will contain:
+#   qwen-astrologer-lora/    — LoRA adapter weights
+#   qwen-astrologer-merged/  — adapter merged into base weights (for vLLM)
+#
+# Those subdirectories are excluded from git (.gitignore) because they
+# contain large model files (.safetensors, .bin).
+# Transfer them to your VPS via scp or push to Hugging Face Hub.

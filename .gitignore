@@ -19,19 +19,15 @@ env/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Data files (raw / processed)
-data/
-*.jsonl
-*.json
-!notebooks/*.ipynb
-
 # Model artifacts & checkpoints
+# results/ folder is tracked (so the directory appears in git)
+# but the large weight files inside it are not
 *.bin
 *.safetensors
 *.pt
 *.pth
-qwen-astrologer-lora/
-qwen-astrologer-merged/
+results/qwen-astrologer-lora/
+results/qwen-astrologer-merged/
 checkpoint-*/
 
 # LoRA adapter zips

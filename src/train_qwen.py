@@ -33,7 +33,7 @@ def main():
     ap.add_argument("--model_id", default="Qwen/Qwen2.5-7B-Instruct")
     ap.add_argument("--train_file", default="data/train.jsonl")
     ap.add_argument("--val_file", default="data/val.jsonl")
-    ap.add_argument("--output_dir", default="./qwen-astrologer-lora")
+    ap.add_argument("--output_dir", default="./results/qwen-astrologer-lora")
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--batch_size", type=int, default=2)

@@ -20,8 +20,8 @@ from peft import PeftModel
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base_model", default="Qwen/Qwen2.5-7B-Instruct")
-    ap.add_argument("--adapter_dir", default="./qwen-astrologer-lora")
-    ap.add_argument("--output_dir", default="./qwen-astrologer-merged")
+    ap.add_argument("--adapter_dir", default="./results/qwen-astrologer-lora")
+    ap.add_argument("--output_dir", default="./results/qwen-astrologer-merged")
     args = ap.parse_args()
 
     print(f"Loading base model {args.base_model} ...")

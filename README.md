@@ -5,15 +5,32 @@ Fine-tunes **Qwen2.5-7B-Instruct** on the Vedaz astrologer chat dataset using **
 ---
 
 ## Table of Contents
-1. [Project Structure](#project-structure)
-2. [Setup](#setup)
-3. [Dataset](#dataset)
-4. [Training](#training)
-5. [Results](#results)
-6. [Evaluation Samples](#evaluation-samples)
-7. [Serving with vLLM](#serving-with-vllm)
-8. [Constraints](#constraints)
-9. [Future Improvements](#future-improvements)
+1. [Submission Writeups](#submission-writeups)
+2. [Project Structure](#project-structure)
+3. [Setup](#setup)
+4. [Dataset](#dataset)
+5. [Training](#training)
+6. [Results](#results)
+7. [Evaluation Samples](#evaluation-samples)
+8. [Serving with vLLM](#serving-with-vllm)
+9. [Constraints](#constraints)
+10. [Future Improvements](#future-improvements)
+
+---
+
+## Submission Writeups
+
+> [!IMPORTANT]
+> The two required submission deliverables are in the [`writeups/`](writeups/) folder.
+
+| # | Question | File |
+|---|----------|------|
+| Q1 | *Write down the process of hosting the model on a VPS using vLLM* | [writeup_1_vps_hosting.md](writeups/writeup_1_vps_hosting.md) |
+| Q2 | *Create 5 manually written chat conversations between user and astrologer for training* | [writeup_2_sample_conversations.md](writeups/writeup_2_sample_conversations.md) |
+
+**Q1** covers the full step-by-step: provisioning a GPU VPS, installing vLLM, serving both merged-model and live-LoRA options, keeping it alive with systemd, putting Nginx + HTTPS in front, and adding API key auth.
+
+**Q2** has 5 Hindi/Hinglish conversations across different topics (career, marriage, mental health, business, health). Each conversation demonstrates kundli-based reasoning, asking the user to wait while the chart is analysed, emotional empathy, and a specific future date prediction.
 
 ---
 
@@ -21,6 +38,9 @@ Fine-tunes **Qwen2.5-7B-Instruct** on the Vedaz astrologer chat dataset using **
 
 ```
 vedaz-assignment/
+├── writeups/                                  ← submission answers (Q1 & Q2)
+│   ├── writeup_1_vps_hosting.md              # Q1: VPS + vLLM hosting guide
+│   └── writeup_2_sample_conversations.md     # Q2: 5 training conversations
 ├── notebooks/
 │   └── Astrologer_Finetune_Colab_v1.ipynb   # executed notebook (source of truth)
 ├── src/
@@ -28,6 +48,9 @@ vedaz-assignment/
 │   ├── train_qwen.py      # LoRA/QLoRA fine-tuning via SFTTrainer
 │   ├── inference_test.py  # generation sanity check with crisis safety gate
 │   └── merge_lora.py      # merge adapter into base weights for vLLM
+├── results/                                   ← final fine-tuned model output
+│   ├── qwen-astrologer-lora/                 # LoRA adapter weights (post-training)
+│   └── qwen-astrologer-merged/              # merged model ready for vLLM serving
 ├── docs/
 │   └── assets/            # plots extracted from the notebook
 ├── data/
@@ -37,6 +60,13 @@ vedaz-assignment/
 ├── requirements.txt
 └── README.md
 ```
+
+> [!NOTE]
+> The `results/` folder is where the fine-tuned model outputs live after training.
+> - **`results/qwen-astrologer-lora/`** — the raw LoRA adapter saved by `train_qwen.py`
+> - **`results/qwen-astrologer-merged/`** — the adapter merged into base weights by `merge_lora.py`, ready to drop straight into vLLM
+>
+> These folders contain large model files (`.safetensors`, `.bin`) so they are excluded from git by `.gitignore`. Transfer them to your VPS via `scp` or push to Hugging Face Hub.
 
 ---
 

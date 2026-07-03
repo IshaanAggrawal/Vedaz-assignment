@@ -97,7 +97,7 @@ def generate(model_to_use, tokenizer, prompt, max_new_tokens=150):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base_model", default="Qwen/Qwen2.5-7B-Instruct")
-    ap.add_argument("--adapter_dir", default="./qwen-astrologer-lora")
+    ap.add_argument("--adapter_dir", default="./results/qwen-astrologer-lora")
     ap.add_argument("--prompt", default=None,
                     help="Single prompt to test. If omitted, runs all default eval prompts.")
     ap.add_argument("--max_new_tokens", type=int, default=150)
