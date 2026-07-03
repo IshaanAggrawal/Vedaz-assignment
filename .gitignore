@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Data files (raw / processed)
+data/
+*.jsonl
+*.json
+!notebooks/*.ipynb
+
+# Model artifacts & checkpoints
+*.bin
+*.safetensors
+*.pt
+*.pth
+qwen-astrologer-lora/
+qwen-astrologer-merged/
+checkpoint-*/
+
+# LoRA adapter zips
+*.zip
+
+# Logs & cache
+logs/
+*.log
+wandb/
+runs/
+.cache/
+huggingface/
+~/.cache/huggingface/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
